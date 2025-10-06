@@ -120,7 +120,8 @@ public class KryoNettyPeer implements IPeer {
 							((ByteBuf) message.payload).writerIndex()));
 		}
 
-		channel.writeAndFlush(new DatagramPacket((ByteBuf) message.payload, message.socketAddressRecipient))
+		channel.writeAndFlush(
+				new DatagramPacket(((ByteBuf) message.payload).retainedDuplicate(), message.socketAddressRecipient))
 				.addListener(new FutureGenericFutureListener("writeAndFlush", KryoNettyPeer.this, message));
 		return true;
 	}
