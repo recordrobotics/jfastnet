@@ -117,6 +117,8 @@ public class State {
 				Class[] parameterTypes = constructor.getParameterTypes();
 				if (parameterTypes.length == 2 && parameterTypes[0] == Config.class && parameterTypes[1] == State.class) {
 					udpPeer = (IPeer) constructor.newInstance(config, this);
+				} else if (parameterTypes.length == 1 && parameterTypes[0] == Config.class) {
+					udpPeer = (IPeer) constructor.newInstance(config);
 				}
 			}
 			if (udpPeer == null) {
