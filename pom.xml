@@ -14,13 +14,12 @@
   ~ limitations under the License.
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.recordrobotics</groupId>
 	<artifactId>jfastnet</artifactId>
-	<version>0.3.9-SNAPSHOT</version>
+	<version>0.3.9</version>
 	<packaging>jar</packaging>
 
 	<name>jfastnet</name>
@@ -49,7 +48,7 @@
 		<url>https://github.com/recordrobotics/jfastnet</url>
 		<connection>scm:git:git://github.com/recordrobotics/jfastnet.git</connection>
 		<developerConnection>scm:git:git@github.com:recordrobotics/jfastnet.git</developerConnection>
-		<tag>jfastnet-0.1.0</tag>
+		<tag>jfastnet-0.3.9</tag>
 	</scm>
 
 	<distributionManagement>
