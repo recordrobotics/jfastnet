@@ -137,8 +137,15 @@ public class PeerController implements IPeerController {
 			if (payload.length > config.maximumUdpPacketSize && !(message instanceof MessagePart)) {
 				return false;
 			}
+		} else if (message.payload instanceof io.netty.buffer.ByteBuf) {
+			int length = ((io.netty.buffer.ByteBuf) message.payload).readableBytes();
+			if (length > config.maximumUdpPacketSize && !(message instanceof MessagePart)) {
+				return false;
+			}
 		} else {
-			log.error("Payload is no byte array.");
+			log.error("Unexpected payload type: {}",
+					message.payload != null ? message.payload.getClass().getName() : "null");
+			return false;
 		}
 		return true;
 	}
@@ -167,7 +174,7 @@ public class PeerController implements IPeerController {
 				// Write error message
 				// OS could prevent too big messages from being sent.
 				log.error("Message {} exceeds configured maximumUdpPacketSize of {}. Payload size is {}.",
-						new Object[]{message, config.maximumUdpPacketSize, message.payloadLength()});
+						new Object[] { message, config.maximumUdpPacketSize, message.payloadLength() });
 			}
 			return false;
 		}
@@ -183,7 +190,7 @@ public class PeerController implements IPeerController {
 			parts.forEach(this::queue);
 		} else {
 			log.error("Message {} exceeds configured maximumUdpPacketSize of {}. Payload size is {}.",
-					new Object[]{message, config.maximumUdpPacketSize, message.payloadLength()});
+					new Object[] { message, config.maximumUdpPacketSize, message.payloadLength() });
 			log.error(" -> Parts couldn't be created for message {}", message);
 		}
 	}
@@ -225,9 +232,12 @@ public class PeerController implements IPeerController {
 		return true;
 	}
 
-	/** Run pre-processors and congestion control.
+	/**
+	 * Run pre-processors and congestion control.
+	 * 
 	 * @param message message about to send
-	 * @return true if we are ready to send the message, false otherwise */
+	 * @return true if we are ready to send the message, false otherwise
+	 */
 	public boolean beforeSend(Message message) {
 		for (IMessageSenderPreProcessor processor : state.getMessageSenderPreProcessors()) {
 			if (processor.beforeSend(message) == null) {

@@ -29,9 +29,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 
-/** The base class for all messages. Subclass this class for your own messages.
+/**
+ * The base class for all messages. Subclass this class for your own messages.
+ * 
  * @param <E> context object for the processing of the message
- * @author Klaus Pfeiffer - klaus@allpiper.com */
+ * @author Klaus Pfeiffer - klaus@allpiper.com
+ */
 @Slf4j
 @Getter
 @EqualsAndHashCode
@@ -46,20 +49,26 @@ public abstract class Message<E> implements Serializable, Comparable<Message> {
 	@Getter
 	long msgId;
 
-	/** Sender id of message. <b>Attention!</b> Don't use this in responses,
-	 * as it will always be the host's id! */
+	/**
+	 * Sender id of message. <b>Attention!</b> Don't use this in responses,
+	 * as it will always be the host's id!
+	 */
 	@Setter
 	private int senderId;
 
 	/** Received id is only used during sending. */
-	@Setter @Getter
+	@Setter
+	@Getter
 	private transient int receiverId;
 
-	/** A message that is getting resent, because of unsuccessful transmission.
+	/**
+	 * A message that is getting resent, because of unsuccessful transmission.
 	 * These messages may not be stopped from sending, when we are over threshold
 	 * because then the server could stall out if enough messages get lost and
-	 * it is waiting for acknowledge messages. */
-	@Setter @Getter
+	 * it is waiting for acknowledge messages.
+	 */
+	@Setter
+	@Getter
 	private transient boolean resendMessage;
 
 	/** Address from receiving or to sending socket. */
@@ -72,14 +81,17 @@ public abstract class Message<E> implements Serializable, Comparable<Message> {
 	public transient Object payload;
 
 	/** Config gets set upon sending / receiving of message. */
-	@Setter @Getter
+	@Setter
+	@Getter
 	private transient Config config;
 
 	/** State gets set upon sending / receiving of message. */
-	@Setter @Getter
+	@Setter
+	@Getter
 	private transient State state;
 
-	public Message() {}
+	public Message() {
+	}
 
 	public Message copyAttributesFrom(Message message) {
 		config = message.config;
@@ -89,9 +101,11 @@ public abstract class Message<E> implements Serializable, Comparable<Message> {
 		return this;
 	}
 
-	/** Additional features can be specified for every message.
+	/**
+	 * Additional features can be specified for every message.
 	 * E.g. when a message should contain a timestamp or when the message
-	 * has to be secured with a hash value. */
+	 * has to be secured with a hash value.
+	 */
 	public MessageFeatures getFeatures() {
 		return DEFAULT_MESSAGE_FEATURES;
 	}
@@ -114,9 +128,13 @@ public abstract class Message<E> implements Serializable, Comparable<Message> {
 		log.trace(" * Resolved ID {} for {}", msgId, this);
 	}
 
-	/** Method called on processing of message.
-	 * @param context context object */
-	public void process(E context) {}
+	/**
+	 * Method called on processing of message.
+	 * 
+	 * @param context context object
+	 */
+	public void process(E context) {
+	}
 
 	@Override
 	public int compareTo(final Message o) {
@@ -125,57 +143,88 @@ public abstract class Message<E> implements Serializable, Comparable<Message> {
 		}
 		// compare by player id
 		int compare = Integer.compare(getReceiverId(), o.getReceiverId());
-		if (compare != 0) return compare;
+		if (compare != 0)
+			return compare;
 
 		// compare by reliable mode
 		compare = Integer.compare(getReliableMode().ordinal(), o.getReliableMode().ordinal());
-		if (compare != 0) return compare;
+		if (compare != 0)
+			return compare;
 
 		// second by id
 		compare = Long.compare(msgId, o.msgId);
-		if (compare != 0) return compare;
+		if (compare != 0)
+			return compare;
 
 		return compare;
 	}
 
 	/** Override if you need something done before sending. */
-	public void prepareToSend() {}
+	public void prepareToSend() {
+	}
 
 	/** Override if you need something done before receiving. */
-	public Message<E> beforeReceive() 			{ return this; }
+	public Message<E> beforeReceive() {
+		return this;
+	}
 
 	/** Specify the reliable mode for this message. */
-	public ReliableMode getReliableMode() 		{ return ReliableMode.SEQUENCE_NUMBER; }
+	public ReliableMode getReliableMode() {
+		return ReliableMode.SEQUENCE_NUMBER;
+	}
 
-	/** If this message is sent with the ACK reliable mode and is then
-	 * acknowledged from the other side, this callback is called. */
-	public void ackCallback() {}
+	/**
+	 * If this message is sent with the ACK reliable mode and is then
+	 * acknowledged from the other side, this callback is called.
+	 */
+	public void ackCallback() {
+	}
 
-	/** If this message can be stacked. Only use in conjunction with SEQUENCE_NUMBER. */
-	public boolean stackable() 					{ return false; }
+	/**
+	 * If this message can be stacked. Only use in conjunction with SEQUENCE_NUMBER.
+	 */
+	public boolean stackable() {
+		return false;
+	}
 
 	/** If this message should be broadcasted by the server upon receipt. */
-	public boolean broadcast() 					{ return false; }
+	public boolean broadcast() {
+		return false;
+	}
 
 	/** Whether message should be sent back to sender when broadcasting. */
-	public boolean sendBroadcastBackToSender()	{ return true; }
+	public boolean sendBroadcastBackToSender() {
+		return true;
+	}
 
-	/** You can specify a unique key for this message. If the same key is
-	 * received another time, the message will be discarded. */
-	public Object getDiscardableKey() 			{ return null; }
+	/**
+	 * You can specify a unique key for this message. If the same key is
+	 * received another time, the message will be discarded.
+	 */
+	public Object getDiscardableKey() {
+		return null;
+	}
 
-	/** If timeout is greater than zero the message will be discarded if
+	/**
+	 * If timeout is greater than zero the message will be discarded if
 	 * received too late.
-	 * @return timeout in ms */
-	public int getTimeOut() 					{ return 0; }
+	 * 
+	 * @return timeout in ms
+	 */
+	public int getTimeOut() {
+		return 0;
+	}
 
 	/** If used, must be handled by the receiver manually. */
-	public int executionPriority() 				{ return 0; }
+	public int executionPriority() {
+		return 0;
+	}
 
 	/** @return true if message should be discarded. */
 	public boolean discard() {
 		if (getTimeOut() > 0 && config.timeProvider.get() > getTimestamp() + getTimeOut()) {
-			log.trace("Message {} discarded. TimeProvider: {}, TimeStamp+TimeOut: {}", new Object[]{this, config.timeProvider.get(), getTimestamp() + getTimeOut()});
+			log.trace("Message {} discarded. TimeProvider: {}, TimeStamp+TimeOut: {}",
+					new Object[] { this, config.timeProvider.get(), getTimestamp() + getTimeOut() });
 			return true;
 		} else {
 			return false;
@@ -183,7 +232,8 @@ public abstract class Message<E> implements Serializable, Comparable<Message> {
 	}
 
 	public String toString() {
-		return getClass().getName() + "(msgId=" + this.msgId + ", reliableMode=" + getReliableMode() + ", senderId=" + this.senderId + ", receiverId=" + this.receiverId + ")";
+		return getClass().getName() + "(msgId=" + this.msgId + ", reliableMode=" + getReliableMode() + ", senderId="
+				+ this.senderId + ", receiverId=" + this.receiverId + ")";
 	}
 
 	public long getTimestamp() {
@@ -198,6 +248,8 @@ public abstract class Message<E> implements Serializable, Comparable<Message> {
 		if (payload instanceof byte[]) {
 			byte[] payload = (byte[]) this.payload;
 			return payload.length;
+		} else if (payload instanceof io.netty.buffer.ByteBuf) {
+			return ((io.netty.buffer.ByteBuf) payload).readableBytes();
 		} else {
 			return -1;
 		}

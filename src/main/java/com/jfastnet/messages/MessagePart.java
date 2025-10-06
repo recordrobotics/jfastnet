@@ -30,8 +30,11 @@ import java.util.stream.Collectors;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-/** Used for bigger messages to be transferred in parts.
- * @author Klaus Pfeiffer - klaus@allpiper.com */
+/**
+ * Used for bigger messages to be transferred in parts.
+ * 
+ * @author Klaus Pfeiffer - klaus@allpiper.com
+ */
 @Slf4j
 public class MessagePart extends Message implements IDontFrame {
 
@@ -45,8 +48,10 @@ public class MessagePart extends Message implements IDontFrame {
 	/** Whether this is the last part to construct the message. */
 	boolean last;
 
-	/** The id servers the purpose to allow receiving of multiple different
-	 * big messages. */
+	/**
+	 * The id servers the purpose to allow receiving of multiple different
+	 * big messages.
+	 */
 	long id;
 
 	/** The number tells us which part of the message we received. */
@@ -56,7 +61,8 @@ public class MessagePart extends Message implements IDontFrame {
 	byte[] bytes;
 
 	/** no-arg constructor required for serialization. */
-	private MessagePart() {}
+	private MessagePart() {
+	}
 
 	private MessagePart(long id, int partNumber, byte[] bytes) {
 		this.id = id;
@@ -68,7 +74,8 @@ public class MessagePart extends Message implements IDontFrame {
 		return createFromMessage(state, id, message, chunkSize, message.getReliableMode());
 	}
 
-	public static List<MessagePart> createFromMessage(@NonNull State state, long id, @NonNull Message message, int chunkSize, @NonNull ReliableMode reliableMode) {
+	public static List<MessagePart> createFromMessage(@NonNull State state, long id, @NonNull Message message,
+			int chunkSize, @NonNull ReliableMode reliableMode) {
 		state.getUdpPeer().createPayload(message);
 		// createPayload has to create a byte array
 		// Depends on the UDP peer if this is possible.
@@ -84,12 +91,27 @@ public class MessagePart extends Message implements IDontFrame {
 				}
 			}
 			return createFromByteArray(id, bytes, chunkSize, reliableMode);
+		} else if (message.payload instanceof io.netty.buffer.ByteBuf) {
+			io.netty.buffer.ByteBuf buf = (io.netty.buffer.ByteBuf) message.payload;
+			byte[] bytes = new byte[buf.readableBytes()];
+			buf.getBytes(buf.readerIndex(), bytes);
+			if (state.getConfig().compressBigMessages) {
+				byte[] compressedBytes = compress(bytes);
+				if (compressedBytes == null) {
+					log.warn("Compression failed for message: {}", message);
+					log.info("Proceeding without compression.");
+				} else {
+					bytes = compressedBytes;
+				}
+			}
+			return createFromByteArray(id, bytes, chunkSize, reliableMode);
 		}
 		log.error("Message could not be created, because of missing byte array payload.");
 		return EMPTY_MESSAGE_PARTS;
 	}
 
-	public static List<MessagePart> createFromByteArray(long id, byte[] bytes, int chunkSize, @NonNull ReliableMode reliableMode) {
+	public static List<MessagePart> createFromByteArray(long id, byte[] bytes, int chunkSize,
+			@NonNull ReliableMode reliableMode) {
 		if (bytes == null) {
 			log.error("Byte array was null!");
 			return EMPTY_MESSAGE_PARTS;
@@ -117,7 +139,8 @@ public class MessagePart extends Message implements IDontFrame {
 			} else if (ReliableMode.ACK_PACKET.equals(reliableMode)) {
 				messages.add(new AckMessagePart(id, partNumber, chunk));
 			} else {
-				throw new UnsupportedOperationException("Reliable mode '" + reliableMode + "' not supported for message splitting!");
+				throw new UnsupportedOperationException(
+						"Reliable mode '" + reliableMode + "' not supported for message splitting!");
 			}
 			partNumber++;
 			from += chunkSize;
@@ -141,7 +164,8 @@ public class MessagePart extends Message implements IDontFrame {
 
 		byteArrayBuffer.put(partNumber, this);
 		if (allPartsReceived()) {
-			Collection<byte[]> values = byteArrayBuffer.values().stream().collect(Collectors.mapping(messagePart -> messagePart.bytes, Collectors.toList()));
+			Collection<byte[]> values = byteArrayBuffer.values().stream()
+					.collect(Collectors.mapping(messagePart -> messagePart.bytes, Collectors.toList()));
 			log.info("Last of {} parts for splitted message received.", values.size());
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			try {
@@ -190,7 +214,8 @@ public class MessagePart extends Message implements IDontFrame {
 			int expectedPartNumber = 0;
 			for (MessagePart messagePart : messageParts) {
 				if (messagePart.partNumber != expectedPartNumber) {
-					log.trace("messagePart.partNumber != expectedPartNumber: {} != {}", messagePart.partNumber, expectedPartNumber);
+					log.trace("messagePart.partNumber != expectedPartNumber: {} != {}", messagePart.partNumber,
+							expectedPartNumber);
 					return false;
 				}
 				expectedPartNumber++;
@@ -230,7 +255,7 @@ public class MessagePart extends Message implements IDontFrame {
 	public static byte[] compress(byte[] bytes) {
 		log.info("Compress byte array of size {}", bytes.length);
 		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(bytes.length);
-			 DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(byteArrayOutputStream)) {
+				DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(byteArrayOutputStream)) {
 			deflaterOutputStream.write(bytes);
 			deflaterOutputStream.close();
 			byteArrayOutputStream.close();
@@ -247,7 +272,7 @@ public class MessagePart extends Message implements IDontFrame {
 			return bytes;
 		}
 		try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-			 InflaterInputStream inflaterInputStream = new InflaterInputStream(byteArrayInputStream)) {
+				InflaterInputStream inflaterInputStream = new InflaterInputStream(byteArrayInputStream)) {
 			ByteArrayOutputStream bout = new ByteArrayOutputStream(2048);
 			int b;
 			while ((b = inflaterInputStream.read()) != -1) {
@@ -264,19 +289,19 @@ public class MessagePart extends Message implements IDontFrame {
 
 	/**
 	 * ZLib magic headers:
+	 * 
 	 * <pre>
 	 * 78 01 - No Compression/low
 	 * 78 9C - Default Compression
 	 * 78 DA - Best Compression
 	 * </pre>
+	 * 
 	 * @return true, if data was compressed with the java default inflater (zlib)
 	 */
 	public static boolean isCompressed(byte[] data) {
-		return data.length > 0 && (data[0] & 0xff) == ZLIB_HEADER && (
-				   (data[1] & 0xff) == 0x9c
+		return data.length > 0 && (data[0] & 0xff) == ZLIB_HEADER && ((data[1] & 0xff) == 0x9c
 				|| (data[1] & 0xff) == 0x01
-				|| (data[1] & 0xff) == 0xda
-		);
+				|| (data[1] & 0xff) == 0xda);
 	}
 
 	/** MessagePart with ACK reliable mode. */
@@ -284,6 +309,7 @@ public class MessagePart extends Message implements IDontFrame {
 		private AckMessagePart(long id, int partNumber, byte[] bytes) {
 			super(id, partNumber, bytes);
 		}
+
 		@Override
 		public ReliableMode getReliableMode() {
 			return ReliableMode.ACK_PACKET;

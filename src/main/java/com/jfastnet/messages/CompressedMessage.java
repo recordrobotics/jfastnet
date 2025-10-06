@@ -26,7 +26,8 @@ public class CompressedMessage<E> extends Message<E> {
 
 	byte[] compressedPayload;
 
-	private CompressedMessage() {}
+	private CompressedMessage() {
+	}
 
 	public static <E> Message<E> createFrom(State state, Message<E> containerMessage) {
 		CompressedMessage<E> compressedMessage = new CompressedMessage<>();
@@ -36,6 +37,17 @@ public class CompressedMessage<E> extends Message<E> {
 		state.getUdpPeer().createPayload(containerMessage);
 		if (containerMessage.payload instanceof byte[]) {
 			byte[] bytes = (byte[]) containerMessage.payload;
+			if (state.getConfig().compressBigMessages) {
+				byte[] compressedBytes = MessagePart.compress(bytes);
+				if (compressedBytes != null) {
+					compressedMessage.compressedPayload = compressedBytes;
+					return compressedMessage;
+				}
+			}
+		} else if (containerMessage.payload instanceof io.netty.buffer.ByteBuf) {
+			io.netty.buffer.ByteBuf buf = (io.netty.buffer.ByteBuf) containerMessage.payload;
+			byte[] bytes = new byte[buf.readableBytes()];
+			buf.getBytes(buf.readerIndex(), bytes);
 			if (state.getConfig().compressBigMessages) {
 				byte[] compressedBytes = MessagePart.compress(bytes);
 				if (compressedBytes != null) {
