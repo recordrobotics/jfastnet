@@ -19,7 +19,7 @@
 
 	<groupId>org.recordrobotics</groupId>
 	<artifactId>jfastnet</artifactId>
-	<version>0.3.9</version>
+	<version>0.3.10-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>jfastnet</name>
@@ -48,7 +48,7 @@
 		<url>https://github.com/recordrobotics/jfastnet</url>
 		<connection>scm:git:git://github.com/recordrobotics/jfastnet.git</connection>
 		<developerConnection>scm:git:git@github.com:recordrobotics/jfastnet.git</developerConnection>
-		<tag>jfastnet-0.3.9</tag>
+		<tag>jfastnet-0.1.0</tag>
 	</scm>
 
 	<distributionManagement>
