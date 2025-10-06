@@ -14,10 +14,11 @@
   ~ limitations under the License.
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.jfastnet</groupId>
+	<groupId>org.recordrobotics</groupId>
 	<artifactId>jfastnet</artifactId>
 	<version>0.3.9-SNAPSHOT</version>
 	<packaging>jar</packaging>
@@ -32,7 +33,7 @@
 	</properties>
 
 	<issueManagement>
-		<url>https://github.com/klaus7/jfastnet/issues</url>
+		<url>https://github.com/recordrobotics/jfastnet/issues</url>
 		<system>GitHub Issues</system>
 	</issueManagement>
 
@@ -45,11 +46,11 @@
 	</licenses>
 
 	<scm>
-		<url>https://github.com/klaus7/jfastnet</url>
-		<connection>scm:git:git://github.com/klaus7/jfastnet.git</connection>
-		<developerConnection>scm:git:git@github.com:klaus7/jfastnet.git</developerConnection>
-	  <tag>jfastnet-0.1.0</tag>
-  </scm>
+		<url>https://github.com/recordrobotics/jfastnet</url>
+		<connection>scm:git:git://github.com/recordrobotics/jfastnet.git</connection>
+		<developerConnection>scm:git:git@github.com:recordrobotics/jfastnet.git</developerConnection>
+		<tag>jfastnet-0.1.0</tag>
+	</scm>
 
 	<distributionManagement>
 		<snapshotRepository>
@@ -95,7 +96,7 @@
 			<version>4.1.42.Final</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency> <!-- improves netty's performance -->
+		<dependency>			<!-- improves netty's performance -->
 			<groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId>
 			<version>3.18.2-GA</version>
