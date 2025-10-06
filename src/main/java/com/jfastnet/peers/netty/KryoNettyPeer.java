@@ -19,6 +19,7 @@ package com.jfastnet.peers.netty;
 import com.jfastnet.Config;
 import com.jfastnet.IPeer;
 import com.jfastnet.NetStats;
+import com.jfastnet.State;
 import com.jfastnet.messages.Message;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -43,15 +44,18 @@ public class KryoNettyPeer implements IPeer {
 	EventLoopGroup group;
 
 	Config config;
+	private final State state;
 	private Random debugRandom = new Random();
 
-	public KryoNettyPeer(Config config, ChannelHandler channelHandler) {
+	public KryoNettyPeer(Config config, State state, ChannelHandler channelHandler) {
 		this.config = config;
+		this.state = state;
 		this.channelHandler = channelHandler;
 	}
 
-	public KryoNettyPeer(Config config) {
+	public KryoNettyPeer(Config config, State state) {
 		this.config = config;
+		this.state = state;
 	}
 
 	@Override
@@ -64,7 +68,8 @@ public class KryoNettyPeer implements IPeer {
 					.option(ChannelOption.SO_BROADCAST, true)
 					.option(ChannelOption.SO_SNDBUF, config.socketSendBufferSize)
 					.option(ChannelOption.SO_RCVBUF, config.socketReceiveBufferSize)
-					.option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(config.receiveBufferAllocator))
+					.option(ChannelOption.RCVBUF_ALLOCATOR,
+							new FixedRecvByteBufAllocator(config.receiveBufferAllocator))
 					.handler(channelHandler != null ? channelHandler : new UdpHandler());
 
 			channel = b.bind(config.bindPort).sync().channel();
@@ -111,7 +116,8 @@ public class KryoNettyPeer implements IPeer {
 		if (config.trackData) {
 			int frame = 0;
 			config.netStats.getData().add(
-					new NetStats.Line(true, message.getSenderId(), frame, message.getTimestamp(), message.getClass(), ((ByteBuf)message.payload).writerIndex()));
+					new NetStats.Line(true, message.getSenderId(), frame, message.getTimestamp(), message.getClass(),
+							((ByteBuf) message.payload).writerIndex()));
 		}
 
 		channel.writeAndFlush(new DatagramPacket((ByteBuf) message.payload, message.socketAddressRecipient))
@@ -125,10 +131,11 @@ public class KryoNettyPeer implements IPeer {
 
 		int length = data.writerIndex();
 		log.trace("Message size of {} is {}", message, length);
-//		if (length > config.maximumUdpPacketSize) {
-//			log.error("Message {} exceeds maximum size of {}! Size is {} byte", new Object[]{message, config.maximumUdpPacketSize, length});
-//			return null;
-//		}
+		// if (length > config.maximumUdpPacketSize) {
+		// log.error("Message {} exceeds maximum size of {}! Size is {} byte", new
+		// Object[]{message, config.maximumUdpPacketSize, length});
+		// return null;
+		// }
 		return data.retain();
 	}
 
@@ -156,8 +163,16 @@ public class KryoNettyPeer implements IPeer {
 		if (config.trackData) {
 			int frame = 0;
 			config.netStats.getData().add(
-					new NetStats.Line(false, message.getSenderId(), frame, message.getTimestamp(), message.getClass(), ((ByteBuf)message.payload).writerIndex()));
+					new NetStats.Line(false, message.getSenderId(), frame, message.getTimestamp(), message.getClass(),
+							((ByteBuf) message.payload).writerIndex()));
 		}
+
+		message.setConfig(config);
+		message.setState(state);
+
+		message.getFeatures().resolve();
+
+		message = message.beforeReceive();
 
 		// Let the controller receive the message.
 		// Processors are called there.
@@ -165,7 +180,8 @@ public class KryoNettyPeer implements IPeer {
 	}
 
 	@Override
-	public void process() {}
+	public void process() {
+	}
 
 	public class UdpHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
@@ -180,7 +196,7 @@ public class KryoNettyPeer implements IPeer {
 		}
 
 		@Override
-		public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)	throws Exception {
+		public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 			log.error("UdpHandler error.", cause);
 			ctx.close();
 			// We don't close the channel because we can keep serving requests.
